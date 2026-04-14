@@ -81,6 +81,82 @@ div[data-testid="stSidebarContent"] .stButton button { width: 100%; }
 .profile-card .team { color: #58a6ff; font-size: 0.95rem; font-weight: 600; }
 .profile-card .meta { color: #8b949e; font-size: 0.85rem; margin-top: 8px; }
 .profile-card .meta b { color: #c9d1d9; }
+
+/* ヒーローストリップ(TOPページ冒頭の「今日の見どころ」) */
+.hero-strip {
+    background: linear-gradient(135deg, #10202f 0%, #1a0f22 100%);
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 16px 22px;
+    margin: 8px 0 18px 0;
+}
+.hero-strip .label {
+    color: #8b949e;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.hero-strip .leader-name {
+    color: #e6edf3;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0;
+}
+.hero-strip .leader-stat {
+    color: #58a6ff;
+    font-weight: 700;
+    font-size: 1.6rem;
+    margin: 2px 0 0 0;
+}
+.hero-strip .leader-sub {
+    color: #8b949e;
+    font-size: 0.78rem;
+    margin-top: 2px;
+}
+
+/* フッター */
+.mlb-footer {
+    margin-top: 36px;
+    padding: 22px 0 12px 0;
+    border-top: 1px solid #30363d;
+    color: #8b949e;
+    font-size: 0.82rem;
+}
+.mlb-footer a { color: #58a6ff; text-decoration: none; }
+.mlb-footer a:hover { text-decoration: underline; }
+.mlb-footer .foot-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 26px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.mlb-footer .note-cta {
+    display: inline-block;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 6px 14px;
+    color: #e6edf3 !important;
+    font-weight: 600;
+}
+.mlb-footer .note-cta:hover { background: #2d333b; }
+.mlb-footer .copyright { text-align: center; color: #6e7681; font-size: 0.75rem; margin-top: 6px; }
+
+/* 注目選手カードのスタッツ表示 */
+.curated-stat {
+    color: #58a6ff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 6px;
+}
+.curated-stat-label {
+    color: #8b949e;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -605,6 +681,71 @@ def _reset_to_top():
 
 
 # ============================================================
+# UI ヘルパー: ヒーロー / フッター
+# ============================================================
+# note ユーザー名(プロフィールURL末尾)。空文字にするとフッターのnoteブロックを非表示
+NOTE_USER = "masatosuda"        # 例: https://note.com/masatosuda
+GITHUB_URL = "https://github.com/masatosuda0703-boop/mlb-player-viewer"
+
+
+def render_hero_strip(curated_list: list):
+    """TOPページ冒頭に表示する「今日の見どころ」バナー。OPS/ERAリーダーを強調表示。"""
+    top_batter  = next((p for p in curated_list if p.get("type", "").startswith("打者")), None)
+    top_pitcher = next((p for p in curated_list if p.get("type", "").startswith("投手")), None)
+    if not top_batter and not top_pitcher:
+        return
+
+    def _block(p, role_label, stat_label):
+        if not p:
+            return ""
+        name = f"{p.get('first','').title()} {p.get('last','').title()}".strip()
+        val  = p.get("stat_val", "")
+        img  = player_headshot_url(p["id"])
+        note = p.get("note", "")
+        return (
+            f'<div style="display:flex;align-items:center;gap:14px;flex:1;min-width:220px;">'
+            f'<img src="{img}" style="width:68px;height:68px;border-radius:50%;'
+            f'border:2px solid #30363d;object-fit:cover;background:#0d1117;" '
+            f'onerror="this.style.visibility=\'hidden\'"/>'
+            f'<div style="min-width:0;">'
+            f'<div class="label">{role_label}リーダー</div>'
+            f'<p class="leader-name">{name}</p>'
+            f'<p class="leader-stat">{stat_label} {val}</p>'
+            f'<div class="leader-sub">{note}</div>'
+            f'</div></div>'
+        )
+
+    html = (
+        '<div class="hero-strip" style="display:flex;gap:22px;flex-wrap:wrap;">'
+        + _block(top_batter,  "打者",  "OPS")
+        + _block(top_pitcher, "投手",  "ERA")
+        + '</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_footer():
+    """ページ下部の共通フッター。note誘導枠 + クレジット。"""
+    note_block = ""
+    if NOTE_USER:
+        note_block = (
+            f'<a class="note-cta" href="https://note.com/{NOTE_USER}" target="_blank" '
+            f'rel="noopener">📝 note で詳しい解説を読む</a>'
+        )
+    html = f"""
+<div class="mlb-footer">
+    <div class="foot-row">
+        {note_block}
+        <span>データ: <a href="https://baseballsavant.mlb.com/" target="_blank" rel="noopener">Baseball Savant</a> / <a href="https://statsapi.mlb.com/" target="_blank" rel="noopener">MLB Stats API</a> / <a href="https://www.fangraphs.com/" target="_blank" rel="noopener">FanGraphs</a></span>
+        <span><a href="{GITHUB_URL}" target="_blank" rel="noopener">⚙️ ソース (GitHub)</a></span>
+    </div>
+    <div class="copyright">© 2026 MLB Player Viewer — 非公式・学習目的のツールです</div>
+</div>
+"""
+    st.markdown(html, unsafe_allow_html=True)
+
+
+# ============================================================
 # サイドバー：検索フォーム
 # ============================================================
 with st.sidebar:
@@ -707,8 +848,18 @@ def _trigger_curated_pick(p: dict, season_val: int):
 
 
 if not search_btn and not has_cached and ss.get("ss_lookup_df") is None:
-    st.info("← サイドバーで選手タイプ・選手名を入力して「検索する」を押してください。")
+    curated_list, is_live = get_curated_players(season)
 
+    # 1) ヒーローストリップ: OPS/ERAリーダー
+    render_hero_strip(curated_list)
+
+    # 2) モバイル向け補助案内(PCではサイドバーがデフォルト表示)
+    st.info(
+        "👈 左のサイドバー(モバイルの方は画面左上の **≫** アイコンをタップ)から"
+        "選手タイプ・選手名を入力して「検索する」を押してください。"
+    )
+
+    # 3) 注目選手セクション
     header_cols = st.columns([3, 1])
     with header_cols[0]:
         st.subheader("⭐ 注目選手 (クリックで即ロード)")
@@ -717,7 +868,6 @@ if not search_btn and not has_cached and ss.get("ss_lookup_df") is None:
             fetch_curated_players.clear()
             st.rerun()
 
-    curated_list, is_live = get_curated_players(season)
     source_label = "MLB Stats API リーダーボードから自動生成" if is_live \
                    else "⚠️ API 取得失敗 — フォールバック表示"
     st.caption(
@@ -732,6 +882,19 @@ if not search_btn and not has_cached and ss.get("ss_lookup_df") is None:
             with col:
                 img_url = player_headshot_url(p["id"])
                 role_color = "#E63946" if p["type"].startswith("投手") else "#2A9D8F"
+                stat_name = p.get("stat_name", "") or ""
+                stat_val  = p.get("stat_val", "")
+                stat_label_disp = (
+                    "OPS" if stat_name == "onBasePlusSlugging"
+                    else "ERA" if stat_name == "earnedRunAverage"
+                    else (stat_name or "").upper()
+                )
+                stat_block = ""
+                if stat_val != "" and stat_val is not None and stat_label_disp:
+                    stat_block = (
+                        f'<div class="curated-stat-label">{stat_label_disp}</div>'
+                        f'<div class="curated-stat">{stat_val}</div>'
+                    )
                 st.markdown(
                     f"""
                     <div style="background:#161b22;border:1px solid #30363d;
@@ -748,7 +911,8 @@ if not search_btn and not has_cached and ss.get("ss_lookup_df") is None:
                                     margin-top:2px;">
                             {p['type']}
                         </div>
-                        <div style="color:#8b949e;font-size:0.75rem;margin-top:4px;
+                        {stat_block}
+                        <div style="color:#8b949e;font-size:0.72rem;margin-top:4px;
                                     min-height:1.2em;">
                             {p['note']}
                         </div>
@@ -762,6 +926,7 @@ if not search_btn and not has_cached and ss.get("ss_lookup_df") is None:
                           args=(p, season),
                           use_container_width=True)
 
+    render_footer()
     st.stop()
 
 if search_btn:
@@ -818,10 +983,14 @@ full_key    = f"{ss.get('ss_base_key', '')}|{player_id}"
 
 if ss.get("ss_full_key") != full_key or ss.get("ss_raw_df") is None:
     start_date, end_date = SEASON_DATES[season]
-    if is_pitcher:
-        raw_df = fetch_statcast_pitcher(player_id, start_date, end_date)
-    else:
-        raw_df = fetch_statcast_batter(player_id, start_date, end_date)
+    with st.spinner(
+        f"🔄 {player_name} の {season} シーズン Statcast データを取得中... "
+        "(初回は10〜20秒ほどかかります)"
+    ):
+        if is_pitcher:
+            raw_df = fetch_statcast_pitcher(player_id, start_date, end_date)
+        else:
+            raw_df = fetch_statcast_batter(player_id, start_date, end_date)
     ss.ss_raw_df       = raw_df
     ss.ss_player_name  = player_name
     ss.ss_player_id    = player_id
@@ -849,11 +1018,6 @@ if raw_df is None or raw_df.empty:
 # ============================================================
 # プロフィールヘッダー
 # ============================================================
-_top_cols = st.columns([1, 3])
-with _top_cols[0]:
-    st.button("🏠 TOPページへ戻る", on_click=_reset_to_top,
-              use_container_width=True, key="reset_top_above_profile")
-
 profile = fetch_player_profile(player_id)
 render_profile_card(profile, player_name, player_id)
 
@@ -2158,11 +2322,6 @@ else:
                 st.plotly_chart(fig_ev, use_container_width=True)
 
 # ============================================================
-# 下部 TOPへ戻るボタン
+# 下部フッター (TOP戻るボタンはヘッダー右上 + サイドバーに集約)
 # ============================================================
-st.divider()
-_bot_cols = st.columns([2, 1, 2])
-with _bot_cols[1]:
-    st.button("🏠 TOPページへ戻る", on_click=_reset_to_top,
-              use_container_width=True, key="reset_top_bottom",
-              type="primary")
+render_footer()
