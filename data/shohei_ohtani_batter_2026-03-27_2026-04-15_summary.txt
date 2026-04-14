@@ -1,0 +1,14 @@
+=== Shohei Ohtani Statcast サマリー ===
+投球数: 289 / 打球数: 40 / HR: 5
+Barrel: 9 (22.5%)
+Hard-Hit(95mph+): 20 (50.0%)
+平均EV: 93.2 mph / 最大EV: 114.6 mph / 平均LA: 13.4度
+xwOBA: 0.410
+Whiff率: 26.8%
+
+--- 本塁打一覧 ---
+2026-04-12 | EV 108.3 | LA 39.0 | 飛距離 374.0ft | 4-Seam Fastball
+2026-04-11 | EV 104.5 | LA 36.0 | 飛距離 390.0ft | Slider
+2026-04-06 | EV 107.8 | LA 25.0 | 飛距離 414.0ft | Sinker
+2026-04-05 | EV 114.6 | LA 26.0 | 飛距離 438.0ft | Cutter
+2026-04-03 | EV 109.5 | LA 27.0 | 飛距離 401.0ft | Changeup

@@ -1,0 +1,11 @@
+=== Cal Raleigh Statcast サマリー ===
+投球数: 319 / 打球数: 42 / HR: 2
+Barrel: 4 (9.5%)
+Hard-Hit(95mph+): 11 (26.2%)
+平均EV: 83.9 mph / 最大EV: 107.8 mph / 平均LA: 24.1度
+xwOBA: 0.301
+Whiff率: 30.4%
+
+--- 本塁打一覧 ---
+2026-04-11 | EV 106.0 | LA 29.0 | 飛距離 364.0ft | Knuckle Curve
+2026-04-06 | EV 107.8 | LA 29.0 | 飛距離 418.0ft | 4-Seam Fastball

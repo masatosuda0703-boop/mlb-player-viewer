@@ -1,0 +1,15 @@
+=== Aaron Judge Statcast サマリー ===
+投球数: 283 / 打球数: 39 / HR: 6
+Barrel: 12 (30.8%)
+Hard-Hit(95mph+): 20 (51.3%)
+平均EV: 90.5 mph / 最大EV: 116.2 mph / 平均LA: 8.6度
+xwOBA: 0.471
+Whiff率: 30.6%
+
+--- 本塁打一覧 ---
+2026-04-13 | EV 111.4 | LA 27.0 | 飛距離 398.0ft | Changeup
+2026-04-13 | EV 116.2 | LA 26.0 | 飛距離 456.0ft | Changeup
+2026-04-12 | EV 108.9 | LA 31.0 | 飛距離 415.0ft | Sinker
+2026-04-03 | EV 101.2 | LA 31.0 | 飛距離 387.0ft | Slider
+2026-03-28 | EV 102.1 | LA 33.0 | 飛距離 383.0ft | Cutter
+2026-03-27 | EV 109.1 | LA 37.0 | 飛距離 405.0ft | 4-Seam Fastball

@@ -1,0 +1,15 @@
+{
+  "batters": [
+    {"name": "Shohei Ohtani", "team": "LAD", "priority": 1},
+    {"name": "Seiya Suzuki", "team": "CHC", "priority": 2},
+    {"name": "Masataka Yoshida", "team": "BOS", "priority": 2}
+  ],
+  "pitchers": [
+    {"name": "Yoshinobu Yamamoto", "team": "LAD", "priority": 1},
+    {"name": "Roki Sasaki", "team": "LAD", "priority": 1},
+    {"name": "Shota Imanaga", "team": "CHC", "priority": 2},
+    {"name": "Yusei Kikuchi", "team": "LAA", "priority": 2},
+    {"name": "Kodai Senga", "team": "NYM", "priority": 2},
+    {"name": "Shota Imanaga", "team": "CHC", "priority": 2}
+  ]
+}

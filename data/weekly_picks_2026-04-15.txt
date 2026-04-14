@@ -1,0 +1,16 @@
+=== 2026-04-15 Weekly Article Candidates ===
+
+[Fixed slot - Japanese players]
+  1. Roki Sasaki (LAD/pitcher) - JP priority 1
+  2. Seiya Suzuki (CHC/batter) - JP priority 2
+  3. Masataka Yoshida (BOS/batter) - JP priority 2
+
+[Trending slot - leaderboard top]
+  4. Jordan Walker (None/batter) - HR 8 / OPS 1.161 [score 54.89]
+  5. Yordan Alvarez (None/batter) - HR 6 / OPS 1.201 [score 49.16]
+  6. José Soriano (None/pitcher) - K 31 / ERA 0.33 [score 175.12]
+
+--- Recommendation ---
+Top pick: José Soriano
+Top pick: Roki Sasaki
+Dark horse: Jordan Walker

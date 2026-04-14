@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# pybaseball cache
+pybaseball_cache/
+*.cache
+
+# Data / generated
+data/cache/
+*.log
+*.tmp
+
+# Local only
+HANDOVER_local.md
+.env

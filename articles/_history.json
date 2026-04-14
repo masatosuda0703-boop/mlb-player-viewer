@@ -1,0 +1,7 @@
+﻿{
+  "articles": [
+    {"date": "2026-04-14", "player": "Shohei Ohtani", "type": "batter", "angle": "HR王レース", "file": "2026_ohtani_hr_king_v2.md"},
+    {"date": "2026-04-15", "player": "Yoshinobu Yamamoto", "type": "pitcher", "angle": "球種構成変化", "file": "2026_yamamoto_pitch_evolution.md"}
+  ],
+  "cooldown_weeks": 4
+}

@@ -1,0 +1,15 @@
+=== Yoshinobu Yamamoto 投手サマリー ===
+総投球数: 184 / 平均4S球速: 95.5 mph
+K: 8 / BB: 2 / 被HR: 1
+Whiff率: 23.1%
+被xwOBA: 0.316
+
+--- 球種構成 ---
+                 count   avg_velo
+pitch_name                       
+Split-Finger        49  90.995918
+4-Seam Fastball     43  95.546512
+Cutter              37  91.086486
+Curveball           23  76.543478
+Sinker              19  94.952632
+Slider              13  87.253846
