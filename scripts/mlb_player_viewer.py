@@ -7,8 +7,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import math
+import re
 import datetime
 import requests
+import xml.etree.ElementTree as ET
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -743,6 +745,140 @@ def render_footer():
 </div>
 """
     st.markdown(html, unsafe_allow_html=True)
+
+
+# ============================================================
+# note 記事連携 (RSS から最新記事を取得し、選手名でマッチング)
+# ============================================================
+_NOTE_RSS_NS = {"content": "http://purl.org/rss/1.0/modules/content/"}
+
+
+@st.cache_data(ttl=60 * 60, show_spinner=False)
+def fetch_note_articles(user: str) -> list:
+    """note.com の公開RSS (最新20件程度) を取得してパース。1時間キャッシュ。"""
+    if not user:
+        return []
+    url = f"https://note.com/{user}/rss"
+    try:
+        r = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+        if r.status_code != 200:
+            return []
+        root = ET.fromstring(r.content)
+    except Exception:
+        return []
+    items = []
+    for item in root.iter("item"):
+        title = (item.findtext("title") or "").strip()
+        link  = (item.findtext("link") or "").strip()
+        pub   = (item.findtext("pubDate") or "").strip()
+        desc  = (item.findtext("description") or "").strip()
+        enc = item.find("content:encoded", _NOTE_RSS_NS)
+        html_body = ((enc.text or "") if enc is not None else "") + " " + desc
+        thumb = ""
+        m = re.search(r'<img[^>]+src="([^"]+)"', html_body)
+        if m:
+            thumb = m.group(1)
+        text = re.sub(r"<[^>]+>", "", desc)
+        text = re.sub(r"\s+", " ", text).strip()
+        if len(text) > 120:
+            text = text[:120] + "…"
+        # pubDate を 'YYYY-MM-DD' 形式に正規化 (失敗したら先頭16文字)
+        pub_short = pub[:16]
+        try:
+            dt = datetime.datetime.strptime(pub[:25], "%a, %d %b %Y %H:%M:%S")
+            pub_short = dt.strftime("%Y-%m-%d")
+        except Exception:
+            pass
+        items.append({"title": title, "link": link, "pub": pub_short,
+                      "desc": text, "thumb": thumb})
+    return items
+
+
+def _player_keywords(player_name_en: str) -> list:
+    """マッチング用キーワード: 英語フル名 + ラストネーム + 日本語エイリアス。"""
+    keys = []
+    if player_name_en:
+        keys.append(player_name_en.lower())
+        parts = player_name_en.lower().split()
+        if len(parts) >= 2:
+            keys.append(parts[-1])
+    alias = JP_ALIASES.get(player_name_en.lower(), "")
+    for a in alias.split("/"):
+        a = a.strip()
+        if a:
+            keys.append(a.lower())
+    # 3文字未満は誤マッチが多いので除外
+    return list({k for k in keys if len(k) >= 3})
+
+
+def match_articles_for_player(articles: list, player_name_en: str, max_n: int = 5) -> list:
+    keys = _player_keywords(player_name_en)
+    if not keys:
+        return []
+    out = []
+    for a in articles:
+        hay = (a["title"] + " " + a["desc"]).lower()
+        if any(k in hay for k in keys):
+            out.append(a)
+            if len(out) >= max_n:
+                break
+    return out
+
+
+def render_related_notes(player_name_en: str):
+    """選手ページ下部に、この選手に関連する note 記事を表示。"""
+    if not NOTE_USER:
+        return
+    articles = fetch_note_articles(NOTE_USER)
+    profile_url = f"https://note.com/{NOTE_USER}"
+    st.markdown("---")
+    st.markdown(f"### 📝 {player_name_en} に関連する note 記事")
+    if not articles:
+        st.markdown(
+            f'<div style="color:#8b949e;font-size:0.9em;">'
+            f'note記事の取得に失敗しました。'
+            f'<a href="{profile_url}" target="_blank" rel="noopener" style="color:#58a6ff;">'
+            f'noteプロフィールを開く →</a></div>',
+            unsafe_allow_html=True,
+        )
+        return
+    matched = match_articles_for_player(articles, player_name_en)
+    if not matched:
+        st.markdown(
+            f'<div style="color:#8b949e;font-size:0.9em;margin-bottom:8px;">'
+            f'最新{len(articles)}件のnote記事には関連記事が見当たりませんでした。</div>'
+            f'<a href="{profile_url}" target="_blank" rel="noopener" '
+            f'style="color:#58a6ff;font-size:0.9em;">📒 noteで他の記事を読む →</a>',
+            unsafe_allow_html=True,
+        )
+        return
+    cards = ['<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:8px;">']
+    for a in matched:
+        thumb_html = (
+            f'<img src="{a["thumb"]}" style="width:100%;height:120px;object-fit:cover;" '
+            f'onerror="this.style.display=\'none\'"/>'
+            if a["thumb"] else ""
+        )
+        cards.append(
+            f'<a href="{a["link"]}" target="_blank" rel="noopener" '
+            f'style="display:block;background:#161b22;border:1px solid #30363d;border-radius:8px;'
+            f'text-decoration:none;color:#c9d1d9;overflow:hidden;transition:border-color .15s;" '
+            f'onmouseover="this.style.borderColor=\'#58a6ff\'" '
+            f'onmouseout="this.style.borderColor=\'#30363d\'">'
+            f'{thumb_html}'
+            f'<div style="padding:10px 12px;">'
+            f'<div style="font-weight:600;font-size:0.92em;line-height:1.35;margin-bottom:6px;">{a["title"]}</div>'
+            f'<div style="color:#8b949e;font-size:0.75em;">{a["pub"]}</div>'
+            f'</div></a>'
+        )
+    cards.append("</div>")
+    st.markdown("".join(cards), unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="margin-top:10px;font-size:0.85em;">'
+        f'<a href="{profile_url}" target="_blank" rel="noopener" style="color:#58a6ff;">'
+        f'📒 noteで他の記事も読む →</a></div>',
+        unsafe_allow_html=True,
+    )
 
 
 # ============================================================
@@ -2322,6 +2458,7 @@ else:
                 st.plotly_chart(fig_ev, use_container_width=True)
 
 # ============================================================
-# 下部フッター (TOP戻るボタンはヘッダー右上 + サイドバーに集約)
+# 関連 note 記事 + 下部フッター
 # ============================================================
+render_related_notes(player_name)
 render_footer()
