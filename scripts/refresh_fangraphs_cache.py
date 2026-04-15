@@ -35,8 +35,19 @@ FG_HEADERS = {
 
 
 def fetch_live(season: int) -> pd.DataFrame:
-    import cloudscraper
+    """まず pybaseball、ダメなら cloudscraper の二段構え。"""
+    print(f"[{season}] fetching via pybaseball.pitching_stats ...", flush=True)
+    try:
+        from pybaseball import pitching_stats
+        df = pitching_stats(season, qual=0)
+        if df is not None and not df.empty:
+            print(f"[{season}] pybaseball OK ({len(df)} rows)", flush=True)
+            return df
+        print(f"[{season}] pybaseball returned empty, trying API ...", flush=True)
+    except Exception as e:
+        print(f"[{season}] pybaseball failed ({type(e).__name__}: {e}), trying API ...", flush=True)
 
+    import cloudscraper
     scraper = cloudscraper.create_scraper(
         browser={"browser": "chrome", "platform": "windows", "desktop": True}
     )
@@ -47,13 +58,12 @@ def fetch_live(season: int) -> pd.DataFrame:
         "ind": 0, "team": 0, "rost": 0,
         "pageitems": 3000, "pagenum": 1,
     }
-    print(f"[{season}] fetching from FanGraphs ...", flush=True)
     r = scraper.get(url, params=params, headers=FG_HEADERS, timeout=60)
     r.raise_for_status()
     payload = r.json()
     rows = payload.get("data") if isinstance(payload, dict) else payload
     df = pd.DataFrame(rows or [])
-    print(f"[{season}] got {len(df)} rows", flush=True)
+    print(f"[{season}] cloudscraper OK ({len(df)} rows)", flush=True)
     return df
 
 
