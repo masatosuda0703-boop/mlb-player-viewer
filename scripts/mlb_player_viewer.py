@@ -402,9 +402,14 @@ def compute_fip_from_statcast(raw_df: pd.DataFrame) -> dict:
     }
 
 
-@st.cache_data(ttl=60 * 60 * 6, show_spinner="FanGraphs リーダーボード取得中...")
-def fetch_fangraphs_pitchers(season: int) -> pd.DataFrame:
-    """FanGraphs JSON API から投手リーダーボードを取得 (cloudscraper 必須)"""
+def _fangraphs_cache_path(season: int):
+    """リポジトリ同梱の CSV キャッシュパス。"""
+    from pathlib import Path
+    return Path(__file__).resolve().parent.parent / "data" / f"fangraphs_pitchers_{season}.csv"
+
+
+def _fetch_fangraphs_live(season: int) -> pd.DataFrame:
+    """FanGraphs JSON API から直接取得 (cloudscraper 経由)。失敗時は例外。"""
     try:
         import cloudscraper
     except ImportError:
@@ -429,6 +434,29 @@ def fetch_fangraphs_pitchers(season: int) -> pd.DataFrame:
     payload = r.json()
     rows = payload.get("data") if isinstance(payload, dict) else payload
     return pd.DataFrame(rows or [])
+
+
+@st.cache_data(ttl=60 * 60 * 6, show_spinner="FanGraphs リーダーボード取得中...")
+def fetch_fangraphs_pitchers(season: int) -> pd.DataFrame:
+    """FanGraphs 投手リーダーボードを取得。
+    1. リポジトリ同梱の CSV キャッシュを優先 (data/fangraphs_pitchers_{season}.csv)
+    2. CSV が無い場合は FanGraphs API にライブアクセス (cloudscraper)
+
+    Streamlit Cloud の出口 IP が FanGraphs に弾かれるケースに備え、CSV キャッシュ方式を採用。
+    ローカルで `python scripts/refresh_fangraphs_cache.py` を実行して CSV を更新可能。
+    """
+    cache_path = _fangraphs_cache_path(season)
+    if cache_path.exists():
+        try:
+            df = pd.read_csv(cache_path)
+            df.attrs["source"] = f"csv ({cache_path.name})"
+            df.attrs["mtime"] = cache_path.stat().st_mtime
+            return df
+        except Exception:
+            pass  # CSV 破損 → live にフォールバック
+    df = _fetch_fangraphs_live(season)
+    df.attrs["source"] = "live (FanGraphs API)"
+    return df
 
 
 def fetch_pitcher_advanced(player_id: int, season: int,
@@ -475,7 +503,8 @@ def fetch_pitcher_advanced(player_id: int, season: int,
                         "WAR":       _get("WAR"),
                         "ERA":       _get("ERA"),
                     }
-                    fg_diag = "FG OK"
+                    src = df.attrs.get("source", "?")
+                    fg_diag = f"FG OK [{src}]"
     except Exception as e:
         fg_diag = f"{type(e).__name__}: {e}"
 
@@ -2219,10 +2248,19 @@ else:
                                    "LA: %{x:.1f}°<br>EV: %{y:.1f} mph<extra></extra>"),
                 ))
 
-            # Barrel zone の目安線 (EV>=98 & 8°-50° 近辺)
-            fig_bb.add_shape(type="rect", x0=8, x1=50, y0=98, y1=120,
-                             line=dict(color="#E63946", width=1, dash="dot"),
-                             fillcolor="rgba(230,57,70,0.06)")
+            # Barrel zone (Statcast本来の可変レンジ): 98mph→26-30°、+1mphごとに上下に1°拡大、116mph以上で8-50°
+            # 多角形の頂点を時計回りに構築
+            barrel_polygon_x = [26, 30, 50, 50, 8, 8, 26]
+            barrel_polygon_y = [98, 98, 116, 120, 120, 116, 98]
+            fig_bb.add_trace(go.Scatter(
+                x=barrel_polygon_x, y=barrel_polygon_y,
+                mode="lines",
+                line=dict(color="#E63946", width=1.5, dash="dot"),
+                fill="toself", fillcolor="rgba(230,57,70,0.08)",
+                name="Barrel Zone",
+                hoverinfo="skip",
+                showlegend=False,
+            ))
             fig_bb.add_annotation(x=29, y=118, text="Barrel Zone",
                                   showarrow=False, font=dict(color="#E63946", size=10))
 
@@ -2240,10 +2278,20 @@ else:
             cC.metric("ハードヒット%",
                       f"{(bb['launch_speed'] >= 95).mean() * 100:.1f}%",
                       help="EV ≥ 95 mph の打球の割合")
-            barrel_mask = (bb["launch_speed"] >= 98) & bb["launch_angle"].between(8, 50)
-            cD.metric("Barrel 推定%",
+            # Barrel: Statcast定義に基づく可変レンジ判定
+            #   EV 98mph→LA 26-30°
+            #   +1mphごとに範囲が上下に1°ずつ拡大
+            #   EV 116mph以上→LA 8-50°
+            _ev = bb["launch_speed"]
+            _la = bb["launch_angle"]
+            _extra = (_ev - 98).clip(lower=0)
+            _low  = (26 - _extra).clip(lower=8)
+            _high = (30 + _extra).clip(upper=50)
+            barrel_mask = (_ev >= 98) & (_la >= _low) & (_la <= _high)
+            cD.metric("Barrel%",
                       f"{barrel_mask.mean() * 100:.1f}%",
-                      help="簡易推定: EV≥98 mph かつ LA 8°〜50°")
+                      help="Statcast定義: EV≥98mphで、98mph時はLA 26-30°、"
+                           "EVが1mph上がるごとに上下に1°ずつ拡大、116mph以上で8-50°")
 
     # ---- Batter Tab 2: Zone Heatmap ----
     with btab2:
