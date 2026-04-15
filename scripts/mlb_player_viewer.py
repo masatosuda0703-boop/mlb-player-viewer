@@ -684,7 +684,7 @@ def _reset_to_top():
 # UI ヘルパー: ヒーロー / フッター
 # ============================================================
 # note ユーザー名(プロフィールURL末尾)。空文字にするとフッターのnoteブロックを非表示
-NOTE_USER = "masatosuda"        # 例: https://note.com/masatosuda
+NOTE_USER = "mlb_analysis"      # https://note.com/mlb_analysis
 GITHUB_URL = "https://github.com/masatosuda0703-boop/mlb-player-viewer"
 
 
