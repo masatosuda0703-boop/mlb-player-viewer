@@ -5,3 +5,4 @@ plotly>=5.18.0
 requests>=2.31.0
 pybaseball>=2.2.7
 cloudscraper>=1.2.71
+Pillow>=10.0.0
