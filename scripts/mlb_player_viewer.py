@@ -825,6 +825,55 @@ def match_articles_for_player(articles: list, player_name_en: str, max_n: int = 
     return out
 
 
+def render_latest_notes(max_n: int = 6):
+    """TOPページ用: note の最新記事をサムネ付きで一覧表示。"""
+    if not NOTE_USER:
+        return
+    articles = fetch_note_articles(NOTE_USER)
+    profile_url = f"https://note.com/{NOTE_USER}"
+    st.markdown("---")
+    header_cols = st.columns([3, 1])
+    with header_cols[0]:
+        st.subheader("📝 note 最新記事")
+    with header_cols[1]:
+        st.markdown(
+            f'<div style="text-align:right;padding-top:10px;">'
+            f'<a href="{profile_url}" target="_blank" rel="noopener" '
+            f'style="color:#58a6ff;text-decoration:none;font-size:0.9em;">'
+            f'すべて見る →</a></div>',
+            unsafe_allow_html=True,
+        )
+    if not articles:
+        st.caption("noteの記事を取得できませんでした。後でもう一度お試しください。")
+        return
+    st.caption(f"note.com/{NOTE_USER} の最新公開記事(1時間キャッシュ)")
+    latest = articles[:max_n]
+    cards = ['<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:4px;">']
+    for a in latest:
+        thumb_html = (
+            f'<img src="{a["thumb"]}" style="width:100%;height:130px;object-fit:cover;" '
+            f'onerror="this.style.display=\'none\'"/>'
+            if a["thumb"] else
+            '<div style="width:100%;height:130px;background:#0d1117;display:flex;'
+            'align-items:center;justify-content:center;color:#30363d;font-size:2em;">📝</div>'
+        )
+        cards.append(
+            f'<a href="{a["link"]}" target="_blank" rel="noopener" '
+            f'style="display:block;background:#161b22;border:1px solid #30363d;border-radius:8px;'
+            f'text-decoration:none;color:#c9d1d9;overflow:hidden;transition:border-color .15s;" '
+            f'onmouseover="this.style.borderColor=\'#58a6ff\'" '
+            f'onmouseout="this.style.borderColor=\'#30363d\'">'
+            f'{thumb_html}'
+            f'<div style="padding:10px 12px;">'
+            f'<div style="font-weight:600;font-size:0.92em;line-height:1.35;margin-bottom:6px;'
+            f'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{a["title"]}</div>'
+            f'<div style="color:#8b949e;font-size:0.75em;">{a["pub"]}</div>'
+            f'</div></a>'
+        )
+    cards.append("</div>")
+    st.markdown("".join(cards), unsafe_allow_html=True)
+
+
 def render_related_notes(player_name_en: str):
     """選手ページ下部に、この選手に関連する note 記事を表示。"""
     if not NOTE_USER:
@@ -1061,6 +1110,9 @@ if not search_btn and not has_cached and ss.get("ss_lookup_df") is None:
                           on_click=_trigger_curated_pick,
                           args=(p, season),
                           use_container_width=True)
+
+    # 4) note 最新記事セクション
+    render_latest_notes(max_n=6)
 
     render_footer()
     st.stop()
