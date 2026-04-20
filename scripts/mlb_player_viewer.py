@@ -30,179 +30,278 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+/* ===== CSS 変数 (ダークテーマ) ===== */
+:root {
+    --bg-primary: #0d1117;
+    --bg-card: #161b22;
+    --bg-card-hover: #1c2128;
+    --bg-elevated: #21262d;
+    --border: #30363d;
+    --border-hover: #58a6ff;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --accent: #58a6ff;
+    --accent-hover: #79b8ff;
+    --pitcher-color: #E63946;
+    --batter-color: #2A9D8F;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+}
+
+/* ===== グローバル微調整 ===== */
 [data-testid="stMetricValue"] { font-size: 1.35rem; font-weight: 700; }
-[data-testid="stMetricLabel"] { font-size: 0.78rem; color: #8b949e; }
+[data-testid="stMetricLabel"] { font-size: 0.78rem; color: var(--text-secondary); }
 
 .stTabs [data-baseweb="tab-list"] { gap: 4px; }
 .stTabs [data-baseweb="tab"] {
     height: 40px;
     padding: 0 18px;
-    border-radius: 6px 6px 0 0;
-    background-color: #161b22;
-    color: #8b949e;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background-color: var(--bg-card);
+    color: var(--text-secondary);
     font-size: 0.9rem;
+    transition: color .15s, background-color .15s;
 }
 .stTabs [aria-selected="true"] {
-    background-color: #21262d;
-    color: #e6edf3;
+    background-color: var(--bg-elevated);
+    color: var(--text-primary);
     font-weight: 600;
-    border-bottom: 2px solid #58a6ff;
+    border-bottom: 2px solid var(--accent);
 }
 
 div[data-testid="stSidebarContent"] .stButton button { width: 100%; }
 
-.player-card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-top: 4px;
-}
-
-.profile-card {
-    background: linear-gradient(135deg, #161b22 0%, #1c2430 100%);
-    border: 1px solid #30363d;
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin: 8px 0 18px 0;
+/* ===== セクション見出し ===== */
+.section-header {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
+    margin: 28px 0 14px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+.section-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+.section-header .badge {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+/* ===== カード共通 ===== */
+.player-card, .curated-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    transition: border-color .2s, transform .15s, box-shadow .2s;
+}
+.curated-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(88, 166, 255, 0.08);
+}
+
+/* ===== プロフィールカード ===== */
+.profile-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, #1c2430 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin: 8px 0 22px 0;
+    display: flex;
+    align-items: center;
+    gap: 22px;
 }
 .profile-card .avatar {
     flex: 0 0 auto;
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    border: 2px solid #30363d;
-    background: #0d1117;
+    border: 3px solid var(--border);
+    background: var(--bg-primary);
     object-fit: cover;
 }
 .profile-card .info { flex: 1 1 auto; min-width: 0; }
-.profile-card h3 { margin: 0 0 4px 0; color: #e6edf3; }
-.profile-card .team { color: #58a6ff; font-size: 0.95rem; font-weight: 600; }
-.profile-card .meta { color: #8b949e; font-size: 0.85rem; margin-top: 8px; }
+.profile-card h3 { margin: 0 0 4px 0; color: var(--text-primary); font-size: 1.3rem; }
+.profile-card .team { color: var(--accent); font-size: 0.95rem; font-weight: 600; }
+.profile-card .meta { color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px; line-height: 1.6; }
 .profile-card .meta b { color: #c9d1d9; }
 
-/* ヒーローストリップ(TOPページ冒頭の「今日の見どころ」) */
+/* ===== ヒーローストリップ ===== */
 .hero-strip {
     background: linear-gradient(135deg, #10202f 0%, #1a0f22 100%);
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    padding: 16px 22px;
-    margin: 8px 0 18px 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 24px;
+    margin: 8px 0 22px 0;
 }
 .hero-strip .label {
-    color: #8b949e;
+    color: var(--text-secondary);
     font-size: 0.72rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 4px;
 }
 .hero-strip .leader-name {
-    color: #e6edf3;
+    color: var(--text-primary);
     font-weight: 700;
     font-size: 1.05rem;
     margin: 0;
 }
 .hero-strip .leader-stat {
-    color: #58a6ff;
+    color: var(--accent);
     font-weight: 700;
     font-size: 1.6rem;
     margin: 2px 0 0 0;
 }
 .hero-strip .leader-sub {
-    color: #8b949e;
+    color: var(--text-secondary);
     font-size: 0.78rem;
     margin-top: 2px;
 }
 
-/* フッター */
-.mlb-footer {
-    margin-top: 36px;
-    padding: 22px 0 12px 0;
-    border-top: 1px solid #30363d;
-    color: #8b949e;
-    font-size: 0.82rem;
-}
-.mlb-footer a { color: #58a6ff; text-decoration: none; }
-.mlb-footer a:hover { text-decoration: underline; }
-.mlb-footer .foot-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 26px;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-}
-.mlb-footer .note-cta {
-    display: inline-block;
-    background: #21262d;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    padding: 6px 14px;
-    color: #e6edf3 !important;
-    font-weight: 600;
-}
-.mlb-footer .note-cta:hover { background: #2d333b; }
-.mlb-footer .copyright { text-align: center; color: #6e7681; font-size: 0.75rem; margin-top: 6px; }
-.mlb-footer .support-link {
-    display: inline-block;
-    background: linear-gradient(135deg, #2d333b, #21262d);
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    padding: 6px 14px;
-    color: #e6edf3 !important;
-    font-weight: 600;
-}
-.mlb-footer .support-link:hover { background: linear-gradient(135deg, #3b424b, #2d333b); }
-
-/* note CTA カード */
-.note-cta-card {
-    margin: 24px auto 12px auto;
-    max-width: 540px;
-    background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
-    border: 1px solid #30363d;
-    border-radius: 10px;
-    padding: 20px 24px;
-    text-align: center;
-}
-.note-cta-card .cta-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #e6edf3;
-    margin-bottom: 8px;
-}
-.note-cta-card .cta-desc {
-    font-size: 0.85rem;
-    color: #8b949e;
-    margin-bottom: 14px;
-    line-height: 1.5;
-}
-.note-cta-card .cta-btn {
-    display: inline-block;
-    background: #58a6ff;
-    color: #0d1117 !important;
-    font-weight: 700;
-    font-size: 0.9rem;
-    padding: 8px 22px;
-    border-radius: 6px;
-    text-decoration: none !important;
-    transition: background .15s;
-}
-.note-cta-card .cta-btn:hover { background: #79b8ff; }
-
-/* 注目選手カードのスタッツ表示 */
+/* ===== 注目選手カード ===== */
 .curated-stat {
-    color: #58a6ff;
+    color: var(--accent);
     font-weight: 700;
     font-size: 0.95rem;
     margin-top: 6px;
 }
 .curated-stat-label {
-    color: #8b949e;
+    color: var(--text-secondary);
     font-size: 0.68rem;
     letter-spacing: 0.05em;
+}
+
+/* ===== 指標カード行 (FanGraphs 等) ===== */
+.stat-row {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 18px 10px 18px;
+    margin: 10px 0 18px 0;
+}
+
+/* ===== フッター ===== */
+.mlb-footer {
+    margin-top: 40px;
+    padding: 24px 0 14px 0;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+}
+.mlb-footer a { color: var(--accent); text-decoration: none; }
+.mlb-footer a:hover { text-decoration: underline; }
+.mlb-footer .foot-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 22px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.mlb-footer .note-cta, .mlb-footer .support-link {
+    display: inline-block;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 16px;
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: background .15s, border-color .15s;
+}
+.mlb-footer .note-cta:hover, .mlb-footer .support-link:hover {
+    background: #2d333b;
+    border-color: var(--accent);
+    text-decoration: none !important;
+}
+.mlb-footer .copyright { text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 8px; }
+
+/* ===== note CTA カード ===== */
+.note-cta-card {
+    margin: 28px auto 14px auto;
+    max-width: 540px;
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-hover) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 22px 26px;
+    text-align: center;
+}
+.note-cta-card .cta-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+.note-cta-card .cta-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.55;
+}
+.note-cta-card .cta-btn {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--bg-primary) !important;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 9px 24px;
+    border-radius: var(--radius-sm);
+    text-decoration: none !important;
+    transition: background .15s, transform .1s;
+}
+.note-cta-card .cta-btn:hover { background: var(--accent-hover); transform: scale(1.02); }
+
+/* ===== モバイル対応 ===== */
+@media (max-width: 768px) {
+    .profile-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+        gap: 12px;
+    }
+    .profile-card .avatar { width: 90px; height: 90px; }
+    .profile-card h3 { font-size: 1.15rem; }
+
+    .hero-strip { padding: 14px 16px; }
+    .hero-strip .leader-stat { font-size: 1.3rem; }
+
+    .mlb-footer .foot-row {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    .mlb-footer .note-cta, .mlb-footer .support-link {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .note-cta-card { padding: 16px 18px; margin: 20px auto 10px auto; }
+    .note-cta-card .cta-title { font-size: 0.95rem; }
+    .note-cta-card .cta-btn { width: 100%; box-sizing: border-box; }
+
+    .section-header { margin: 20px 0 10px 0; }
+    .section-header h3 { font-size: 1rem; }
+}
+
+@media (max-width: 480px) {
+    .profile-card .avatar { width: 72px; height: 72px; }
+    .profile-card { padding: 14px 12px; }
+    .hero-strip .leader-stat { font-size: 1.1rem; }
+    .hero-strip .leader-name { font-size: 0.92rem; }
+    [data-testid="stMetricValue"] { font-size: 1.1rem; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1144,26 +1243,29 @@ if not search_btn and not has_cached and ss.get("ss_lookup_df") is None:
     render_hero_strip(curated_list)
 
     # 2) モバイル向け補助案内(PCではサイドバーがデフォルト表示)
-    st.info(
-        "👈 左のサイドバー(モバイルの方は画面左上の **≫** アイコンをタップ)から"
-        "選手タイプ・選手名を入力して「検索する」を押してください。"
+    st.markdown(
+        '<div style="background:var(--bg-card);border:1px solid var(--border);'
+        'border-radius:var(--radius-md);padding:12px 16px;margin:4px 0 20px 0;'
+        'color:var(--text-secondary);font-size:0.88rem;line-height:1.5;">'
+        '👈 サイドバーから選手を検索できます'
+        '<span style="color:var(--text-muted);font-size:0.8rem;"> — '
+        'モバイルの方は左上の <b>≫</b> をタップ</span></div>',
+        unsafe_allow_html=True,
     )
 
     # 3) 注目選手セクション
-    header_cols = st.columns([3, 1])
-    with header_cols[0]:
-        st.subheader("⭐ 注目選手 (クリックで即ロード)")
-    with header_cols[1]:
-        if st.button("🔄 リストを更新", use_container_width=True):
-            fetch_curated_players.clear()
-            st.rerun()
-
-    source_label = "MLB Stats API リーダーボードから自動生成" if is_live \
-                   else "⚠️ API 取得失敗 — フォールバック表示"
-    st.caption(
-        f"{season} シーズン · OPS上位打者 + ERA上位投手 · {source_label}"
-        f"  (12時間キャッシュ)"
+    source_label = "MLB Stats API リーダーボード" if is_live \
+                   else "⚠️ フォールバック表示"
+    st.markdown(
+        f'<div class="section-header">'
+        f'<h3>⭐ 注目選手</h3>'
+        f'<span class="badge">{season} · {source_label}</span>'
+        f'</div>',
+        unsafe_allow_html=True,
     )
+    if st.button("🔄 リストを更新", use_container_width=False):
+        fetch_curated_players.clear()
+        st.rerun()
 
     N_COLS = 4
     for row_start in range(0, len(curated_list), N_COLS):
@@ -1187,23 +1289,22 @@ if not search_btn and not has_cached and ss.get("ss_lookup_df") is None:
                     )
                 st.markdown(
                     f"""
-                    <div style="background:#161b22;border:1px solid #30363d;
-                                border-radius:10px;padding:12px;text-align:center;
-                                margin-bottom:6px;">
-                        <img src="{img_url}" style="width:96px;height:96px;
-                             border-radius:50%;border:2px solid #30363d;
-                             object-fit:cover;background:#0d1117;"
+                    <div class="curated-card" style="text-align:center;margin-bottom:6px;">
+                        <img src="{img_url}" style="width:88px;height:88px;
+                             border-radius:50%;border:2px solid var(--border);
+                             object-fit:cover;background:var(--bg-primary);"
                              onerror="this.style.visibility='hidden'"/>
-                        <div style="color:#e6edf3;font-weight:700;margin-top:8px;">
+                        <div style="color:var(--text-primary);font-weight:700;margin-top:10px;
+                                    font-size:0.95rem;">
                             {p['first'].title()} {p['last'].title()}
                         </div>
-                        <div style="color:{role_color};font-size:0.78rem;font-weight:600;
-                                    margin-top:2px;">
+                        <div style="color:{role_color};font-size:0.76rem;font-weight:600;
+                                    margin-top:3px;">
                             {p['type']}
                         </div>
                         {stat_block}
-                        <div style="color:#8b949e;font-size:0.72rem;margin-top:4px;
-                                    min-height:1.2em;">
+                        <div style="color:var(--text-secondary);font-size:0.72rem;margin-top:6px;
+                                    min-height:1.2em;line-height:1.4;">
                             {p['note']}
                         </div>
                     </div>
@@ -1331,6 +1432,7 @@ if is_pitcher:
             diff = v - 100
             return f"{diff:+.0f} vs 平均"
 
+        st.markdown('<div class="stat-row">', unsafe_allow_html=True)
         ac1, ac2, ac3, ac4, ac5, ac6 = st.columns(6)
         ac1.metric("Stuff+",    _fmt(adv.get("Stuff+"), ".0f"),
                    _delta_plus(adv.get("Stuff+")),
@@ -1352,6 +1454,7 @@ if is_pitcher:
                         f"BB/9: {_fmt(adv.get('BB/9'), '.1f')}")
         st.caption(f"📈 FanGraphs 高度指標 ({season} シーズン) — "
                    f"Stuff+/Location+/Pitching+ は 2020+ のみ利用可能")
+        st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.caption(f"⚠️ FanGraphs 高度指標を取得できませんでした — 詳細: {adv_diag}")
 
@@ -1394,6 +1497,13 @@ if "game_date" in df_all.columns and "home_team" in df_all.columns:
     game_log["試合日"] = game_log["game_date"].astype(str)
 
     log_label = "登板" if is_pitcher else "出場"
+    st.markdown(
+        f'<div class="section-header">'
+        f'<h3>📊 試合データ</h3>'
+        f'<span class="badge">{game_label}</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
     with st.expander(f"📅 試合ログ（全 {len(game_log)} {log_label}）", expanded=False):
         log_disp = game_log[["試合日", "対戦", "pitches", "avg_velo", "innings"]].copy()
         pitch_col_name = "投球数" if is_pitcher else "被投球数"
