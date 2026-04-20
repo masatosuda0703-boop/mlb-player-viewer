@@ -146,6 +146,51 @@ div[data-testid="stSidebarContent"] .stButton button { width: 100%; }
 }
 .mlb-footer .note-cta:hover { background: #2d333b; }
 .mlb-footer .copyright { text-align: center; color: #6e7681; font-size: 0.75rem; margin-top: 6px; }
+.mlb-footer .support-link {
+    display: inline-block;
+    background: linear-gradient(135deg, #2d333b, #21262d);
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 6px 14px;
+    color: #e6edf3 !important;
+    font-weight: 600;
+}
+.mlb-footer .support-link:hover { background: linear-gradient(135deg, #3b424b, #2d333b); }
+
+/* note CTA カード */
+.note-cta-card {
+    margin: 24px auto 12px auto;
+    max-width: 540px;
+    background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px 24px;
+    text-align: center;
+}
+.note-cta-card .cta-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #e6edf3;
+    margin-bottom: 8px;
+}
+.note-cta-card .cta-desc {
+    font-size: 0.85rem;
+    color: #8b949e;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+.note-cta-card .cta-btn {
+    display: inline-block;
+    background: #58a6ff;
+    color: #0d1117 !important;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 8px 22px;
+    border-radius: 6px;
+    text-decoration: none !important;
+    transition: background .15s;
+}
+.note-cta-card .cta-btn:hover { background: #79b8ff; }
 
 /* 注目選手カードのスタッツ表示 */
 .curated-stat {
@@ -758,15 +803,21 @@ def render_hero_strip(curated_list: list):
 def render_footer():
     """ページ下部の共通フッター。note誘導枠 + クレジット。"""
     note_block = ""
+    support_block = ""
     if NOTE_USER:
         note_block = (
             f'<a class="note-cta" href="https://note.com/{NOTE_USER}" target="_blank" '
             f'rel="noopener">📝 note で詳しい解説を読む</a>'
         )
+        support_block = (
+            f'<a class="support-link" href="https://note.com/{NOTE_USER}" target="_blank" '
+            f'rel="noopener">☕ サイトを応援する</a>'
+        )
     html = f"""
 <div class="mlb-footer">
     <div class="foot-row">
         {note_block}
+        {support_block}
         <span>データ: <a href="https://baseballsavant.mlb.com/" target="_blank" rel="noopener">Baseball Savant</a> / <a href="https://statsapi.mlb.com/" target="_blank" rel="noopener">MLB Stats API</a> / <a href="https://www.fangraphs.com/" target="_blank" rel="noopener">FanGraphs</a></span>
         <span><a href="{GITHUB_URL}" target="_blank" rel="noopener">⚙️ ソース (GitHub)</a></span>
     </div>
@@ -959,6 +1010,31 @@ def render_related_notes(player_name_en: str):
     )
 
 
+def render_note_cta(context: str = "general"):
+    """note プロフィールへの誘導 CTA カード (中庸トーン)。
+    context: "player" → 選手ページ用メッセージ / "general" → TOPページ用
+    """
+    if not NOTE_USER:
+        return
+    profile_url = f"https://note.com/{NOTE_USER}"
+    if context == "player":
+        title = "この選手をもっと深く知りたい方へ"
+        desc = "毎日更新の note では、Statcast データを使った詳細な分析記事を公開しています。"
+    else:
+        title = "MLB データ分析を毎日お届け"
+        desc = "note では Statcast データを使った選手パフォーマンスの深掘り記事を毎日公開中。"
+    html = f"""
+<div class="note-cta-card">
+    <div class="cta-title">{title}</div>
+    <div class="cta-desc">{desc}</div>
+    <a class="cta-btn" href="{profile_url}" target="_blank" rel="noopener">
+        📝 note で記事を読む
+    </a>
+</div>
+"""
+    st.markdown(html, unsafe_allow_html=True)
+
+
 # ============================================================
 # サイドバー：検索フォーム
 # ============================================================
@@ -1143,6 +1219,7 @@ if not search_btn and not has_cached and ss.get("ss_lookup_df") is None:
     # 4) note 最新記事セクション
     render_latest_notes(max_n=6)
 
+    render_note_cta("general")
     render_footer()
     st.stop()
 
@@ -2561,4 +2638,5 @@ else:
 # 関連 note 記事 + 下部フッター
 # ============================================================
 render_related_notes(player_name)
+render_note_cta("player")
 render_footer()
