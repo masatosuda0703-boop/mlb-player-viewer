@@ -949,6 +949,7 @@ def fetch_note_articles(user: str) -> list:
     except Exception:
         return []
     items = []
+    _media_ns = {"media": "http://search.yahoo.com/mrss/"}
     for item in root.iter("item"):
         title = (item.findtext("title") or "").strip()
         link  = (item.findtext("link") or "").strip()
@@ -957,9 +958,31 @@ def fetch_note_articles(user: str) -> list:
         enc = item.find("content:encoded", _NOTE_RSS_NS)
         html_body = ((enc.text or "") if enc is not None else "") + " " + desc
         thumb = ""
-        m = re.search(r'<img[^>]+src="([^"]+)"', html_body)
-        if m:
-            thumb = m.group(1)
+        # 1) <enclosure> タグ (type=image)
+        enclosure = item.find("enclosure")
+        if enclosure is not None:
+            enc_type = (enclosure.get("type") or "")
+            enc_url  = (enclosure.get("url") or "").strip()
+            if enc_url and ("image" in enc_type or enc_url.endswith((".jpg", ".png", ".webp"))):
+                thumb = enc_url
+        # 2) <media:thumbnail> or <media:content> (属性 url= またはテキストノード)
+        if not thumb:
+            mt = item.find("media:thumbnail", _media_ns)
+            if mt is not None:
+                thumb = (mt.get("url") or mt.text or "").strip()
+        if not thumb:
+            mc = item.find("media:content", _media_ns)
+            if mc is not None:
+                thumb = (mc.get("url") or mc.text or "").strip()
+        # 3) HTML 内の <img src="..."> (従来方式)
+        if not thumb:
+            m = re.search(r'<img[^>]+src="([^"]+)"', html_body)
+            if m:
+                thumb = m.group(1)
+        # 4) note 記事リンクから OGP 画像 URL を推定
+        #    note の記事URLは https://note.com/{user}/n/{note_id} 形式
+        #    OGP 画像は https://assets.st-note.com/production/uploads/images/... が多いが
+        #    推定困難なのでフォールバックなし
         text = re.sub(r"<[^>]+>", "", desc)
         text = re.sub(r"\s+", " ", text).strip()
         if len(text) > 120:
@@ -1500,13 +1523,6 @@ if "game_date" in df_all.columns and "home_team" in df_all.columns:
     game_log["試合日"] = game_log["game_date"].astype(str)
 
     log_label = "登板" if is_pitcher else "出場"
-    st.markdown(
-        f'<div class="section-header">'
-        f'<h3>📊 試合データ</h3>'
-        f'<span class="badge">{game_label}</span>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
     with st.expander(f"📅 試合ログ（全 {len(game_log)} {log_label}）", expanded=False):
         log_disp = game_log[["試合日", "対戦", "pitches", "avg_velo", "innings"]].copy()
         pitch_col_name = "投球数" if is_pitcher else "被投球数"
@@ -1533,6 +1549,14 @@ if "game_date" in df_all.columns and "home_team" in df_all.columns:
 else:
     df         = df_all.copy()
     game_label = f"{ss.ss_season} シーズン合算"
+
+st.markdown(
+    f'<div class="section-header">'
+    f'<h3>📊 試合データ</h3>'
+    f'<span class="badge">{game_label}</span>'
+    f'</div>',
+    unsafe_allow_html=True,
+)
 
 # ============================================================
 # 対戦相手フィルタ
