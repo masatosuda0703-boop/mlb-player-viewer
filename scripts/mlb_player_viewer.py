@@ -861,6 +861,8 @@ def _reset_to_top():
 # note ユーザー名(プロフィールURL末尾)。空文字にするとフッターのnoteブロックを非表示
 NOTE_USER = "mlb_analysis"      # https://note.com/mlb_analysis
 GITHUB_URL = "https://github.com/masatosuda0703-boop/mlb-player-viewer"
+AMAZON_TAG = "mlbanalysis-22"   # Amazon アソシエイト トラッキングID
+AMAZON_MLB_URL = f"https://www.amazon.co.jp/s?k=MLB+%E3%82%B0%E3%83%83%E3%82%BA&tag={AMAZON_TAG}"
 
 
 def render_hero_strip(curated_list: list):
@@ -917,6 +919,7 @@ def render_footer():
     <div class="foot-row">
         {note_block}
         {support_block}
+        <a class="support-link" href="{AMAZON_MLB_URL}" target="_blank" rel="noopener">⚾ MLB グッズを探す</a>
         <span>データ: <a href="https://baseballsavant.mlb.com/" target="_blank" rel="noopener">Baseball Savant</a> / <a href="https://statsapi.mlb.com/" target="_blank" rel="noopener">MLB Stats API</a> / <a href="https://www.fangraphs.com/" target="_blank" rel="noopener">FanGraphs</a></span>
         <span><a href="{GITHUB_URL}" target="_blank" rel="noopener">⚙️ ソース (GitHub)</a></span>
     </div>
